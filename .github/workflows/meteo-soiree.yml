@@ -1,0 +1,229 @@
+name: Bulletin météo soirée Cognac
+
+on:
+  schedule:
+    - cron: "0 15 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  meteo-soiree:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Générer le bulletin soirée
+        run: |
+          python3 - <<'PY'
+          import json
+          import urllib.request
+          import random
+          import xml.etree.ElementTree as ET
+          from datetime import datetime
+          from email.utils import format_datetime
+
+          url = (
+              "https://api.open-meteo.com/v1/forecast"
+              "?latitude=45.695"
+              "&longitude=-0.330"
+              "&current=temperature_2m,"
+              "apparent_temperature,weather_code,"
+              "wind_speed_10m,wind_direction_10m"
+              "&daily=temperature_2m_max,temperature_2m_min,"
+              "weather_code,wind_speed_10m_max,"
+              "wind_gusts_10m_max"
+              "&timezone=Europe%2FParis"
+              "&forecast_days=2"
+          )
+
+          data = json.load(
+              urllib.request.urlopen(url)
+          )
+
+          current = data["current"]
+          daily = data["daily"]
+
+          temp = round(current["temperature_2m"])
+          temp_max_demain = round(
+              daily["temperature_2m_max"][1]
+          )
+          temp_min_demain = round(
+              daily["temperature_2m_min"][1]
+          )
+          vent_demain = round(
+              daily["wind_speed_10m_max"][1]
+          )
+          rafales_demain = round(
+              daily["wind_gusts_10m_max"][1]
+          )
+
+          code_demain = daily["weather_code"][1]
+
+          meteo = {
+              0: "un ciel dégagé",
+              1: "un temps ensoleillé",
+              2: "un ciel partiellement nuageux",
+              3: "un ciel couvert",
+              45: "du brouillard",
+              48: "du brouillard givrant",
+              51: "de faibles bruines",
+              53: "des bruines",
+              55: "de fortes bruines",
+              61: "de faibles pluies",
+              63: "des pluies",
+              65: "de fortes pluies",
+              71: "de faibles chutes de neige",
+              73: "des chutes de neige",
+              75: "de fortes chutes de neige",
+              80: "de faibles averses",
+              81: "des averses",
+              82: "de fortes averses",
+              95: "un risque d'orage",
+              96: "des orages avec grêle",
+              99: "de forts orages avec grêle"
+          }
+
+          condition_demain = meteo.get(
+              code_demain,
+              "des conditions variables"
+          )
+
+          maintenant = datetime.now().astimezone()
+          date_rss = format_datetime(maintenant)
+
+          debuts = [
+              "Pour votre soirée à Cognac, ",
+              "Voici les prévisions pour ce soir à Cognac : ",
+              "Du côté de Cognac ce soir, ",
+              "Petit point météo pour votre soirée : ",
+              "Pour la soirée et demain à Cognac, "
+          ]
+
+          fins = [
+              f"Le vent pourra atteindre "
+              f"{vent_demain} kilomètres heure demain, "
+              f"avec des rafales jusqu'à "
+              f"{rafales_demain} kilomètres heure.",
+
+              f"Demain, le vent soufflera jusqu'à "
+              f"{vent_demain} kilomètres heure, "
+              f"avec des rafales pouvant atteindre "
+              f"{rafales_demain} kilomètres heure.",
+
+              f"Côté vent demain, comptez jusqu'à "
+              f"{vent_demain} kilomètres heure, "
+              f"avec des rafales pouvant atteindre "
+              f"{rafales_demain} kilomètres heure."
+          ]
+
+          debut = random.choice(debuts)
+          fin = random.choice(fins)
+
+          bulletin = (
+              f"{debut}"
+              f"la température est actuellement de {temp} degrés. "
+              f"Demain, le temps sera "
+              f"{condition_demain}, "
+              f"avec une température minimale de "
+              f"{temp_min_demain} degrés et une maximale de "
+              f"{temp_max_demain} degrés. "
+              f"{fin}"
+          )
+
+          titre = (
+              f"Météo Cognac : soirée et prévisions de demain, "
+              f"jusqu'à {temp_max_demain} degrés"
+          )
+
+          rss = ET.Element(
+              "rss",
+              version="2.0"
+          )
+
+          channel = ET.SubElement(
+              rss,
+              "channel"
+          )
+
+          ET.SubElement(
+              channel,
+              "title"
+          ).text = "Météo Cognac - Soirée et demain"
+
+          ET.SubElement(
+              channel,
+              "link"
+          ).text = (
+              "https://hits1radio.github.io/meteo-cognac/"
+          )
+
+          ET.SubElement(
+              channel,
+              "description"
+          ).text = (
+              "Bulletin météo du soir et prévisions du lendemain"
+          )
+
+          ET.SubElement(
+              channel,
+              "language"
+          ).text = "fr-fr"
+
+          item = ET.SubElement(
+              channel,
+              "item"
+          )
+
+          ET.SubElement(
+              item,
+              "title"
+          ).text = titre
+
+          ET.SubElement(
+              item,
+              "description"
+          ).text = bulletin
+
+          ET.SubElement(
+              item,
+              "pubDate"
+          ).text = date_rss
+
+          ET.SubElement(
+              item,
+              "guid"
+          ).text = (
+              f"meteo-soiree-{maintenant.timestamp()}"
+          )
+
+          ET.indent(
+              rss,
+              space="  "
+          )
+
+          ET.ElementTree(
+              rss
+          ).write(
+              "rss-soiree.xml",
+              encoding="utf-8",
+              xml_declaration=True
+          )
+
+          print("Bulletin soirée généré :")
+          print(bulletin)
+
+          PY
+
+      - name: Publier le RSS soirée
+        run: |
+          git config user.name "Météo Cognac"
+          git config user.email "actions@github.com"
+
+          git add rss-soiree.xml
+
+          git commit -m "Mise à jour météo soirée" || exit 0
+
+          git push
