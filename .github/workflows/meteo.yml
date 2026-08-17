@@ -19,6 +19,7 @@ jobs:
         run: |
           python3 - <<'PY'
           import json
+          import random
           import urllib.request
           from datetime import datetime
           from email.utils import format_datetime
@@ -44,22 +45,17 @@ jobs:
           current = data["current"]
           daily = data["daily"]
 
+          # Température actuelle
           temp = round(current["temperature_2m"])
-          ressenti = round(current["apparent_temperature"])
+
+          # Vent actuel
           vent = round(current["wind_speed_10m"])
           direction = round(current["wind_direction_10m"])
 
-          temp_max = round(
-              daily["temperature_2m_max"][0]
-          )
-
-          temp_min = round(
-              daily["temperature_2m_min"][0]
-          )
-
-          rafales = round(
-              daily["wind_gusts_10m_max"][0]
-          )
+          # Prévisions
+          temp_max = round(daily["temperature_2m_max"][0])
+          temp_min = round(daily["temperature_2m_min"][0])
+          rafales = round(daily["wind_gusts_10m_max"][0])
 
           # Traduction météo
           meteo = {
@@ -91,7 +87,7 @@ jobs:
               "des conditions variables"
           )
 
-          # Direction du vent
+          # Directions du vent
           directions = [
               "nord",
               "nord-est",
@@ -107,6 +103,44 @@ jobs:
               round(direction / 45) % 8
           ]
 
+          # Débuts de bulletin
+          debuts = [
+              "Du côté de Cognac, ",
+              "À Cognac, côté météo, ",
+              "Petit point météo à Cognac : ",
+              "Voici les dernières infos météo pour Cognac : ",
+              "Pour la météo à Cognac, "
+          ]
+
+          # Fins de bulletin
+          fins = [
+              f"Le vent souffle actuellement à {vent} kilomètres heure "
+              f"de secteur {direction_texte}, avec des rafales pouvant "
+              f"atteindre {rafales} kilomètres heure.",
+
+              f"Côté vent, il souffle à {vent} kilomètres heure "
+              f"de secteur {direction_texte}, avec des rafales jusqu'à "
+              f"{rafales} kilomètres heure.",
+
+              f"Le vent est orienté {direction_texte} et souffle à "
+              f"{vent} kilomètres heure, avec des rafales pouvant "
+              f"atteindre {rafales} kilomètres heure."
+          ]
+
+          debut = random.choice(debuts)
+          fin = random.choice(fins)
+
+          # Bulletin radio
+          bulletin = (
+              f"{debut}"
+              f"il fait actuellement {temp} degrés, "
+              f"avec {condition}. "
+              f"Cet après-midi, le thermomètre pourra atteindre "
+              f"{temp_max} degrés. "
+              f"La température minimale sera de {temp_min} degrés. "
+              f"{fin}"
+          )
+
           # Heure de génération
           maintenant = datetime.now().astimezone()
           date_rss = format_datetime(maintenant)
@@ -117,65 +151,10 @@ jobs:
               f"jusqu'à {temp_max} degrés aujourd'hui"
           )
 
-          # Bulletin radio
-import random
-
-debuts = [
-    "Du côté de Cognac, ",
-    "À Cognac, côté météo, ",
-    "Petit point météo à Cognac : ",
-    "Voici les dernières infos météo pour Cognac : ",
-    "Pour la météo à Cognac, "
-]
-
-fins = [
-    f"Le vent souffle actuellement à {vent} kilomètres heure "
-    f"de secteur {direction_texte}, avec des rafales pouvant "
-    f"atteindre {rafales} kilomètres heure.",
-
-    f"Côté vent, il souffle à {vent} kilomètres heure "
-    f"de secteur {direction_texte}, avec des rafales jusqu'à "
-    f"{rafales} kilomètres heure.",
-
-    f"Le vent est orienté {direction_texte} et souffle à "
-    f"{vent} kilomètres heure, avec des rafales pouvant atteindre "
-    f"{rafales} kilomètres heure."
-]
-
-debut = random.choice(debuts)
-fin = random.choice(fins)
-
-bulletin = (
-    f"{debut}"
-    f"il fait actuellement {temp} degrés, "
-    f"avec {condition}. "
-    f"La température ressentie est de {ressenti} degrés. "
-    f"Cet après-midi, le thermomètre pourra atteindre "
-    f"{temp_max} degrés. "
-    f"La température minimale sera de {temp_min} degrés. "
-    f"{fin}"
-)
-              f"Actuellement, il fait {temp} degrés, "
-              f"avec {condition}. "
-              f"La température ressentie est de {ressenti} degrés. "
-              f"Cet après-midi, le thermomètre pourra atteindre "
-              f"{temp_max} degrés. "
-              f"La température minimale sera de {temp_min} degrés. "
-              f"Le vent souffle actuellement à {vent} kilomètres heure "
-              f"de secteur {direction_texte}, avec des rafales pouvant "
-              f"atteindre {rafales} kilomètres heure."
-          )
-
           # Création du RSS
-          rss = ET.Element(
-              "rss",
-              version="2.0"
-          )
+          rss = ET.Element("rss", version="2.0")
 
-          channel = ET.SubElement(
-              rss,
-              "channel"
-          )
+          channel = ET.SubElement(rss, "channel")
 
           ET.SubElement(
               channel,
@@ -185,9 +164,7 @@ bulletin = (
           ET.SubElement(
               channel,
               "link"
-          ).text = (
-              "https://hits1radio.github.io/meteo-cognac/"
-          )
+          ).text = "https://hits1radio.github.io/meteo-cognac/"
 
           ET.SubElement(
               channel,
@@ -199,10 +176,7 @@ bulletin = (
               "language"
           ).text = "fr-fr"
 
-          item = ET.SubElement(
-              channel,
-              "item"
-          )
+          item = ET.SubElement(channel, "item")
 
           ET.SubElement(
               item,
@@ -222,18 +196,11 @@ bulletin = (
           ET.SubElement(
               item,
               "guid"
-          ).text = (
-              f"meteo-cognac-{maintenant.timestamp()}"
-          )
+          ).text = f"meteo-cognac-{maintenant.timestamp()}"
 
-          ET.indent(
-              rss,
-              space="  "
-          )
+          ET.indent(rss, space="  ")
 
-          ET.ElementTree(
-              rss
-          ).write(
+          ET.ElementTree(rss).write(
               "rss.xml",
               encoding="utf-8",
               xml_declaration=True
