@@ -30,11 +30,11 @@ jobs:
               "?latitude=45.695"
               "&longitude=-0.330"
               "&current=temperature_2m,relative_humidity_2m,"
-              "apparent_temperature,precipitation,weather_code,"
+              "apparent_temperature,weather_code,"
               "wind_speed_10m,wind_direction_10m"
               "&daily=temperature_2m_max,temperature_2m_min,"
               "weather_code,precipitation_probability_max,"
-              "wind_speed_10m_max,wind_gusts_10m_max,sunrise,sunset"
+              "wind_gusts_10m_max,sunrise,sunset"
               "&timezone=Europe%2FParis"
               "&forecast_days=1"
           )
@@ -112,12 +112,10 @@ jobs:
               f"La température ressentie est de {ressentie} degrés. "
               f"Cet après-midi, le thermomètre pourra atteindre "
               f"{temp_max} degrés. "
-              f"Ce matin, la température minimale est de "
-              f"{temp_min} degrés. "
-              f"Le vent souffle actuellement à "
-              f"{vent} kilomètres heure de secteur "
-              f"{direction_texte}, avec des rafales pouvant atteindre "
-              f"{rafales} kilomètres heure. "
+              f"La température minimale sera de {temp_min} degrés. "
+              f"Le vent souffle actuellement à {vent} kilomètres heure "
+              f"de secteur {direction_texte}, avec des rafales pouvant "
+              f"atteindre {rafales} kilomètres heure. "
               f"Le risque de pluie est de {pluie_max} pour cent. "
               f"Le soleil se lèvera à {sunrise} "
               f"et se couchera à {sunset}."
@@ -133,7 +131,7 @@ jobs:
           ET.SubElement(
               channel, "link"
           ).text = "https://hits1radio.github.io/meteo-cognac/"
-          
+
           ET.SubElement(
               channel, "description"
           ).text = "Bulletin météo radio de Cognac"
@@ -141,7 +139,6 @@ jobs:
           ET.SubElement(channel, "language").text = "fr-fr"
 
           item = ET.SubElement(channel, "item")
-
           ET.SubElement(item, "title").text = titre
           ET.SubElement(item, "description").text = bulletin
           ET.SubElement(item, "pubDate").text = date_rss
