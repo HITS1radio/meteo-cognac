@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+  <channel>
+    <title>Météo Cognac - Charente</title>
+    <link>https://open-meteo.com/</link>
+    <description>Température et météo actuelle à Cognac</description>
+    <language>fr-fr</language>
+    <item>
+      <title>Météo Cognac : 21°C actuellement, max 30°C</title>
+      <description>À Cognac, il fait actuellement 21 degrés, avec couvert. Aujourd'hui : couvert, minimum 20 degrés et maximum 30 degrés.</description>
+      <pubDate>17/08/2026 à 06:21</pubDate>
+      <guid>meteo-cognac-17/08/2026 à 06:21</guid>
+    </item>
+  </channel>
+</rss>
