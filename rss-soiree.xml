@@ -1,0 +1,15 @@
+<?xml version='1.0' encoding='utf-8'?>
+<rss version="2.0">
+  <channel>
+    <title>Météo Cognac - Soirée et demain</title>
+    <link>https://hits1radio.github.io/meteo-cognac/</link>
+    <description>Bulletin météo du soir et prévisions du lendemain</description>
+    <language>fr-fr</language>
+    <item>
+      <title>Météo Cognac : soirée et prévisions de demain, jusqu'à 31 degrés</title>
+      <description>Du côté de Cognac ce soir, la température est actuellement de 22 degrés. Demain, le temps sera un ciel partiellement nuageux, avec une température minimale de 19 degrés et une maximale de 31 degrés. Le vent pourra atteindre 17 kilomètres heure demain, avec des rafales jusqu'à 33 kilomètres heure.</description>
+      <pubDate>Mon, 17 Aug 2026 07:16:37 +0000</pubDate>
+      <guid>meteo-soiree-1786950997.060267</guid>
+    </item>
+  </channel>
+</rss>
