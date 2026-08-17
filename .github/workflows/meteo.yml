@@ -16,91 +16,148 @@ jobs:
       - name: Récupérer le dépôt
         uses: actions/checkout@v4
 
-      - name: Générer le flux RSS
+      - name: Générer le bulletin météo
         run: |
           python3 <<'PY'
           import json
           import urllib.request
           import xml.etree.ElementTree as ET
           from datetime import datetime
+          from email.utils import format_datetime
 
           url = (
               "https://api.open-meteo.com/v1/forecast"
               "?latitude=45.695"
               "&longitude=-0.330"
-              "&current=temperature_2m,weather_code"
-              "&daily=temperature_2m_max,temperature_2m_min,weather_code"
+              "&current=temperature_2m,relative_humidity_2m,"
+              "apparent_temperature,precipitation,weather_code,"
+              "wind_speed_10m,wind_direction_10m"
+              "&daily=temperature_2m_max,temperature_2m_min,"
+              "weather_code,precipitation_probability_max,"
+              "wind_speed_10m_max,wind_gusts_10m_max,sunrise,sunset"
               "&timezone=Europe%2FParis"
               "&forecast_days=1"
           )
 
           data = json.load(urllib.request.urlopen(url))
 
-          temp = round(data["current"]["temperature_2m"])
-          current_code = data["current"]["weather_code"]
-          temp_max = round(data["daily"]["temperature_2m_max"][0])
-          temp_min = round(data["daily"]["temperature_2m_min"][0])
-          day_code = data["daily"]["weather_code"][0]
+          current = data["current"]
+          daily = data["daily"]
+
+          temp = round(current["temperature_2m"])
+          ressentie = round(current["apparent_temperature"])
+          humidite = round(current["relative_humidity_2m"])
+          vent = round(current["wind_speed_10m"])
+          direction = round(current["wind_direction_10m"])
+
+          temp_max = round(daily["temperature_2m_max"][0])
+          temp_min = round(daily["temperature_2m_min"][0])
+          pluie_max = daily["precipitation_probability_max"][0]
+          rafales = round(daily["wind_gusts_10m_max"][0])
+
+          sunrise = daily["sunrise"][0][11:16]
+          sunset = daily["sunset"][0][11:16]
 
           weather = {
-              0: "ciel dégagé",
-              1: "plutôt ensoleillé",
-              2: "partiellement nuageux",
-              3: "couvert",
-              45: "brouillard",
-              48: "brouillard givrant",
-              51: "bruine légère",
-              53: "bruine",
-              55: "bruine forte",
-              61: "pluie légère",
-              63: "pluie",
-              65: "forte pluie",
-              71: "neige légère",
-              73: "neige",
-              75: "fortes chutes de neige",
-              80: "averses légères",
-              81: "averses",
-              82: "fortes averses",
-              95: "orage",
-              96: "orage avec grêle",
-              99: "orage avec forte grêle"
+              0: "un ciel dégagé",
+              1: "un temps ensoleillé",
+              2: "un ciel partiellement nuageux",
+              3: "un ciel couvert",
+              45: "du brouillard",
+              48: "du brouillard givrant",
+              51: "de faibles bruines",
+              53: "des bruines",
+              55: "de fortes bruines",
+              61: "de faibles pluies",
+              63: "des pluies",
+              65: "de fortes pluies",
+              71: "de faibles chutes de neige",
+              73: "des chutes de neige",
+              75: "de fortes chutes de neige",
+              80: "de faibles averses",
+              81: "des averses",
+              82: "de fortes averses",
+              95: "un risque d'orage",
+              96: "des orages avec grêle",
+              99: "de forts orages avec grêle"
           }
 
-          condition = weather.get(day_code, "conditions variables")
-          current_condition = weather.get(current_code, "conditions variables")
-
-          now = datetime.now().strftime("%d/%m/%Y à %H:%M")
-
-          title = f"Météo Cognac : {temp}°C actuellement, max {temp_max}°C"
-
-          description = (
-              f"À Cognac, il fait actuellement {temp} degrés, "
-              f"avec {current_condition}. "
-              f"Aujourd'hui : {condition}, "
-              f"minimum {temp_min} degrés et maximum {temp_max} degrés."
+          condition = weather.get(
+              current["weather_code"],
+              "des conditions variables"
           )
 
-          rss = f'''<?xml version="1.0" encoding="UTF-8"?>
-          <rss version="2.0">
-            <channel>
-              <title>Météo Cognac - Charente</title>
-              <link>https://open-meteo.com/</link>
-              <description>Température et météo actuelle à Cognac</description>
-              <language>fr-fr</language>
-              <item>
-                <title>{title}</title>
-                <description>{description}</description>
-                <pubDate>{now}</pubDate>
-                <guid>meteo-cognac-{now}</guid>
-              </item>
-            </channel>
-          </rss>
-          '''
+          directions = [
+              "nord", "nord-est", "est", "sud-est",
+              "sud", "sud-ouest", "ouest", "nord-ouest"
+          ]
 
-          with open("rss.xml", "w", encoding="utf-8") as f:
-              f.write(rss)
+          direction_texte = directions[
+              round(direction / 45) % 8
+          ]
 
-          print(description)
+          now = datetime.now().astimezone()
+          date_rss = format_datetime(now)
+          heure = now.strftime("%H:%M")
+
+          titre = (
+              f"Météo Cognac : {temp} degrés actuellement, "
+              f"jusqu'à {temp_max} degrés aujourd'hui"
+          )
+
+          bulletin = (
+              f"Voici la météo à Cognac. "
+              f"Actuellement, il fait {temp} degrés, "
+              f"avec {condition}. "
+              f"La température ressentie est de {ressentie} degrés. "
+              f"Cet après-midi, le thermomètre pourra atteindre "
+              f"{temp_max} degrés. "
+              f"Ce matin, la température minimale est de "
+              f"{temp_min} degrés. "
+              f"Le vent souffle actuellement à "
+              f"{vent} kilomètres heure de secteur "
+              f"{direction_texte}, avec des rafales pouvant atteindre "
+              f"{rafales} kilomètres heure. "
+              f"Le risque de pluie est de {pluie_max} pour cent. "
+              f"Le soleil se lèvera à {sunrise} "
+              f"et se couchera à {sunset}."
+          )
+
+          rss = ET.Element("rss", version="2.0")
+          channel = ET.SubElement(rss, "channel")
+
+          ET.SubElement(
+              channel, "title"
+          ).text = "Bulletin météo Cognac"
+
+          ET.SubElement(
+              channel, "link"
+          ).text = "https://hits1radio.github.io/meteo-cognac/"
+          
+          ET.SubElement(
+              channel, "description"
+          ).text = "Bulletin météo radio de Cognac"
+
+          ET.SubElement(channel, "language").text = "fr-fr"
+
+          item = ET.SubElement(channel, "item")
+
+          ET.SubElement(item, "title").text = titre
+          ET.SubElement(item, "description").text = bulletin
+          ET.SubElement(item, "pubDate").text = date_rss
+          ET.SubElement(
+              item, "guid"
+          ).text = f"meteo-cognac-{now.timestamp()}"
+
+          ET.indent(rss, space="  ")
+
+          ET.ElementTree(rss).write(
+              "rss.xml",
+              encoding="utf-8",
+              xml_declaration=True
+          )
+
+          print(bulletin)
           PY
 
       - name: Publier le flux RSS
@@ -108,5 +165,5 @@ jobs:
           git config user.name "Météo Cognac"
           git config user.email "actions@github.com"
           git add rss.xml
-          git diff --cached --quiet || git commit -m "Mise à jour météo"
+          git diff --cached --quiet || git commit -m "Mise à jour bulletin météo"
           git push
