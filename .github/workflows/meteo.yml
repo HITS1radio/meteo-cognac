@@ -105,21 +105,18 @@ jobs:
               f"jusqu'à {temp_max} degrés aujourd'hui"
           )
 
-          bulletin = (
-              f"Voici la météo à Cognac. "
-              f"Actuellement, il fait {temp} degrés, "
-              f"avec {condition}. "
-              f"La température ressentie est de {ressentie} degrés. "
-              f"Cet après-midi, le thermomètre pourra atteindre "
-              f"{temp_max} degrés. "
-              f"La température minimale sera de {temp_min} degrés. "
-              f"Le vent souffle actuellement à {vent} kilomètres heure "
-              f"de secteur {direction_texte}, avec des rafales pouvant "
-              f"atteindre {rafales} kilomètres heure. "
-              f"Le risque de pluie est de {pluie_max} pour cent. "
-              f"Le soleil se lèvera à {sunrise} "
-              f"et se couchera à {sunset}."
-          )
+bulletin = (
+    f"Voici la météo à Cognac. "
+    f"Actuellement, il fait {temp} degrés, "
+    f"avec {condition}. "
+    f"La température ressentie est de {ressentie} degrés. "
+    f"Cet après-midi, le thermomètre pourra atteindre "
+    f"{temp_max} degrés. "
+    f"La température minimale sera de {temp_min} degrés. "
+    f"Le vent souffle actuellement à {vent} kilomètres heure "
+    f"de secteur {direction_texte}, avec des rafales pouvant "
+    f"atteindre {rafales} kilomètres heure."
+)
 
           rss = ET.Element("rss", version="2.0")
           channel = ET.SubElement(rss, "channel")
