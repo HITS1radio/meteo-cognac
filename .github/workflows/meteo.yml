@@ -118,8 +118,43 @@ jobs:
           )
 
           # Bulletin radio
-          bulletin = (
-              f"Voici la météo à Cognac. "
+import random
+
+debuts = [
+    "Du côté de Cognac, ",
+    "À Cognac, côté météo, ",
+    "Petit point météo à Cognac : ",
+    "Voici les dernières infos météo pour Cognac : ",
+    "Pour la météo à Cognac, "
+]
+
+fins = [
+    f"Le vent souffle actuellement à {vent} kilomètres heure "
+    f"de secteur {direction_texte}, avec des rafales pouvant "
+    f"atteindre {rafales} kilomètres heure.",
+
+    f"Côté vent, il souffle à {vent} kilomètres heure "
+    f"de secteur {direction_texte}, avec des rafales jusqu'à "
+    f"{rafales} kilomètres heure.",
+
+    f"Le vent est orienté {direction_texte} et souffle à "
+    f"{vent} kilomètres heure, avec des rafales pouvant atteindre "
+    f"{rafales} kilomètres heure."
+]
+
+debut = random.choice(debuts)
+fin = random.choice(fins)
+
+bulletin = (
+    f"{debut}"
+    f"il fait actuellement {temp} degrés, "
+    f"avec {condition}. "
+    f"La température ressentie est de {ressenti} degrés. "
+    f"Cet après-midi, le thermomètre pourra atteindre "
+    f"{temp_max} degrés. "
+    f"La température minimale sera de {temp_min} degrés. "
+    f"{fin}"
+)
               f"Actuellement, il fait {temp} degrés, "
               f"avec {condition}. "
               f"La température ressentie est de {ressenti} degrés. "
