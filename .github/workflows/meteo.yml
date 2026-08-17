@@ -1,58 +1,68 @@
-name: Mise à jour météo Cognac
+name: Météo Cognac
 
 on:
   schedule:
-    - cron: "0 * * * *"
+    - cron: "55 * * * *"
   workflow_dispatch:
 
 permissions:
   contents: write
 
 jobs:
-  update-rss:
+  meteo:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Récupérer le dépôt
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Générer le bulletin météo
+      - name: Générer RSS météo
         run: |
-          python3 <<'PY'
+          python3 - <<'PY'
           import json
           import urllib.request
-          import xml.etree.ElementTree as ET
           from datetime import datetime
           from email.utils import format_datetime
+          import xml.etree.ElementTree as ET
 
+          # Météo de Cognac
           url = (
               "https://api.open-meteo.com/v1/forecast"
               "?latitude=45.695"
               "&longitude=-0.330"
-              "&current=temperature_2m,relative_humidity_2m,"
-              "apparent_temperature,weather_code,"
-              "wind_speed_10m,wind_direction_10m"
+              "&current=temperature_2m,apparent_temperature,"
+              "weather_code,wind_speed_10m,wind_direction_10m"
               "&daily=temperature_2m_max,temperature_2m_min,"
-              "weather_code,wind_gusts_10m_max"
+              "wind_gusts_10m_max"
               "&timezone=Europe%2FParis"
               "&forecast_days=1"
           )
 
-          data = json.load(urllib.request.urlopen(url))
+          data = json.load(
+              urllib.request.urlopen(url)
+          )
 
           current = data["current"]
           daily = data["daily"]
 
           temp = round(current["temperature_2m"])
-          ressentie = round(current["apparent_temperature"])
+          ressenti = round(current["apparent_temperature"])
           vent = round(current["wind_speed_10m"])
           direction = round(current["wind_direction_10m"])
 
-          temp_max = round(daily["temperature_2m_max"][0])
-          temp_min = round(daily["temperature_2m_min"][0])
-          rafales = round(daily["wind_gusts_10m_max"][0])
+          temp_max = round(
+              daily["temperature_2m_max"][0]
+          )
 
-          weather = {
+          temp_min = round(
+              daily["temperature_2m_min"][0]
+          )
+
+          rafales = round(
+              daily["wind_gusts_10m_max"][0]
+          )
+
+          # Traduction météo
+          meteo = {
               0: "un ciel dégagé",
               1: "un temps ensoleillé",
               2: "un ciel partiellement nuageux",
@@ -76,11 +86,12 @@ jobs:
               99: "de forts orages avec grêle"
           }
 
-          condition = weather.get(
+          condition = meteo.get(
               current["weather_code"],
               "des conditions variables"
           )
 
+          # Direction du vent
           directions = [
               "nord",
               "nord-est",
@@ -96,19 +107,22 @@ jobs:
               round(direction / 45) % 8
           ]
 
-          now = datetime.now().astimezone()
-          date_rss = format_datetime(now)
+          # Heure de génération
+          maintenant = datetime.now().astimezone()
+          date_rss = format_datetime(maintenant)
 
+          # Titre
           titre = (
               f"Météo Cognac : {temp} degrés actuellement, "
               f"jusqu'à {temp_max} degrés aujourd'hui"
           )
 
+          # Bulletin radio
           bulletin = (
               f"Voici la météo à Cognac. "
               f"Actuellement, il fait {temp} degrés, "
               f"avec {condition}. "
-              f"La température ressentie est de {ressentie} degrés. "
+              f"La température ressentie est de {ressenti} degrés. "
               f"Cet après-midi, le thermomètre pourra atteindre "
               f"{temp_max} degrés. "
               f"La température minimale sera de {temp_min} degrés. "
@@ -117,9 +131,16 @@ jobs:
               f"atteindre {rafales} kilomètres heure."
           )
 
-          rss = ET.Element("rss", version="2.0")
+          # Création du RSS
+          rss = ET.Element(
+              "rss",
+              version="2.0"
+          )
 
-          channel = ET.SubElement(rss, "channel")
+          channel = ET.SubElement(
+              rss,
+              "channel"
+          )
 
           ET.SubElement(
               channel,
@@ -129,7 +150,9 @@ jobs:
           ET.SubElement(
               channel,
               "link"
-          ).text = "https://hits1radio.github.io/meteo-cognac/"
+          ).text = (
+              "https://hits1radio.github.io/meteo-cognac/"
+          )
 
           ET.SubElement(
               channel,
@@ -141,7 +164,10 @@ jobs:
               "language"
           ).text = "fr-fr"
 
-          item = ET.SubElement(channel, "item")
+          item = ET.SubElement(
+              channel,
+              "item"
+          )
 
           ET.SubElement(
               item,
@@ -161,23 +187,35 @@ jobs:
           ET.SubElement(
               item,
               "guid"
-          ).text = f"meteo-cognac-{now.timestamp()}"
+          ).text = (
+              f"meteo-cognac-{maintenant.timestamp()}"
+          )
 
-          ET.indent(rss, space="  ")
+          ET.indent(
+              rss,
+              space="  "
+          )
 
-          ET.ElementTree(rss).write(
+          ET.ElementTree(
+              rss
+          ).write(
               "rss.xml",
               encoding="utf-8",
               xml_declaration=True
           )
 
+          print("Bulletin généré :")
           print(bulletin)
+
           PY
 
-      - name: Publier le flux RSS
+      - name: Publier le RSS
         run: |
           git config user.name "Météo Cognac"
           git config user.email "actions@github.com"
+
           git add rss.xml
-          git diff --cached --quiet || git commit -m "Mise à jour bulletin météo"
+
+          git commit -m "Mise à jour météo Cognac" || exit 0
+
           git push
