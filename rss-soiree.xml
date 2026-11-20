@@ -6,10 +6,10 @@
     <description>Bulletin météo du soir et prévisions du lendemain</description>
     <language>fr-fr</language>
     <item>
-      <title>Météo Cognac : soirée et prévisions de demain, jusqu'à 15 degrés</title>
-      <description>Pour votre soirée à Cognac, la température est actuellement de 11 degrés. Demain, le temps sera un ciel couvert, avec une température minimale de 11 degrés et une maximale de 15 degrés. Le vent pourra atteindre 14 kilomètres heure demain, avec des rafales jusqu'à 30 kilomètres heure.</description>
-      <pubDate>Fri, 20 Nov 2026 01:31:27 +0000</pubDate>
-      <guid>meteo-soiree-1795138287.376665</guid>
+      <title>Météo Cognac : soirée et prévisions de demain, jusqu'à 14 degrés</title>
+      <description>Petit point météo pour votre soirée : la température est actuellement de 13 degrés. Demain, le temps sera un ciel couvert, avec une température minimale de 11 degrés et une maximale de 14 degrés. Le vent pourra atteindre 14 kilomètres heure demain, avec des rafales jusqu'à 32 kilomètres heure.</description>
+      <pubDate>Fri, 20 Nov 2026 09:25:08 +0000</pubDate>
+      <guid>meteo-soiree-1795166708.520472</guid>
     </item>
   </channel>
 </rss>
